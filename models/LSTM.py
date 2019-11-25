@@ -31,6 +31,7 @@ class LSTMClassifier(nn.Module):
 		self.word_embeddings.weight = nn.Parameter(weights, requires_grad=False) # Assigning the look-up table to the pre-trained GloVe word embedding.
 		self.lstm = nn.LSTM(embedding_length, hidden_size)
 		self.label = nn.Linear(hidden_size, output_size)
+		self.softmax_layer = nn.Softmax(dim=-1)
 		
 	def forward(self, input_sentence, batch_size=None):
 	
@@ -58,5 +59,5 @@ class LSTMClassifier(nn.Module):
 			c_0 = Variable(torch.zeros(1, batch_size, self.hidden_size).cuda())
 		output, (final_hidden_state, final_cell_state) = self.lstm(input, (h_0, c_0))
 		final_output = self.label(final_hidden_state[-1]) # final_hidden_state.size() = (1, batch_size, hidden_size) & final_output.size() = (batch_size, output_size)
-		
-		return final_output
+		final_soft = torch.log(self.softmax_layer(final_output) + 1e-5)
+		return final_soft
